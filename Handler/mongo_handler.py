@@ -34,16 +34,13 @@ class MongoHandler:
                     {'Date': row['Date'], 'Code': row['Code']}, {'$set': {
                         'Company': row['Company']
                         , 'Type': row['Type']
-                        , '3D-SMA': row['3D-SMA']
-                        , '5D-SMA': row['5D-SMA']
-                        , 'High-EMA': row['High-EMA']
-                        , 'Low-EMA': row['Low-EMA']
                         , 'Code': row['Code']
                         , 'Date': row['Date']
                         , 'High': row['High']
                         , 'Low': row['Low']
                         , 'Open': row['Open']
                         , 'Close': row['Close']
+                        , 'candleCenter': row['candleCenter']
                         , 'Volume': row['Volume']
                         , 'Adj Close': row['Adj Close']
                     }}, upsert=True

@@ -37,19 +37,16 @@ class StockCrawler(Crawler):
             end_date = CONFIG['end_date']
 
         for idx, row in tqdm(company_df.iterrows(), total=len(company_df)):
-            try:
-                company = row.company
-                code = row.code
+            company = row.company
+            code = row.code
 
+            try:
                 tmp_df = pdr.DataReader(code, "yahoo", start_date, end_date)
                 tmp_df.reset_index(inplace=True)
                 tmp_df['Company'] = company
                 tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
-                tmp_df['3D-SMA'] = tmp_df['Close'].rolling(window=3, min_periods=1).mean()
-                tmp_df['5D-SMA'] = tmp_df['Close'].rolling(window=5, min_periods=1).mean()
-                tmp_df['High-EMA'] = pd.Series.ewm(tmp_df['High'], span=1).mean()
-                tmp_df['Low-EMA'] = pd.Series.ewm(tmp_df['Low'], span=1).mean()
                 tmp_df['Code'] = code
+                tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
 
                 stock_df = pd.concat([stock_df, tmp_df])
                 time.sleep(random.randrange(1, 3))
@@ -65,7 +62,8 @@ class StockCrawler(Crawler):
                     'Adj Close': np.NaN,
                     'Company': company,
                     'Type': np.NaN,
-                    'Code': code
+                    'Code': code,
+                    'candleCenter': np.NaN
                 }
                 tmp_df = pd.DataFrame(data=stop_stock_data, index=[0])
                 tmp_df.reset_index(inplace=True)

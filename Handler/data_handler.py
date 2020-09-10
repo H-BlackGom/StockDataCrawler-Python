@@ -25,10 +25,7 @@ class DataHandler:
         pass
 
     def save_stock_data(self, stock_df):
-        if CONFIG['iterate']:
-            self.mongo.update_stock_data(stock_df)
-        else:
-            self.mongo.add_stock_data(stock_df)
+        self.mongo.update_stock_data(stock_df)
 
     def _get_company_by_mongo(self, obj):
         self.log.debug("Get company information by database(MongoDB)")
