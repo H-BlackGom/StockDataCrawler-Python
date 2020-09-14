@@ -1,0 +1,8 @@
+version: '3.1'
+
+services:
+  changsungcollector:
+    image: stockdata:0.1
+#    volumes:
+#      - ./config.yaml:/Collectors/config.yaml
+    container_name: "stockdatacollector"
