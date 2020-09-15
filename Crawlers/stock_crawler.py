@@ -4,7 +4,7 @@ import yaml
 import pandas as pd
 import numpy as np
 import pandas_datareader as pdr
-from datetime import datetime
+from datetime import datetime, timedelta
 from tqdm import tqdm
 from Crawlers.crawler import Crawler
 yaml.warnings({'YAMLLoadWarning': False})
@@ -20,7 +20,7 @@ class StockCrawler(Crawler):
 
     def _get_date(self):
         now_date = datetime.now()
-        s_date = now_date.strftime('%Y-%m-%d')
+        s_date = (now_date - timedelta(days=1)).strftime('%Y-%m-%d')
         e_date = now_date.strftime('%Y-%m-%d')
         self.log.debug("start date - {0}, end date - {1}".format(s_date, e_date))
 
@@ -42,14 +42,18 @@ class StockCrawler(Crawler):
 
             try:
                 tmp_df = pdr.DataReader(code, "yahoo", start_date, end_date)
-                tmp_df.reset_index(inplace=True)
-                tmp_df['Company'] = company
-                tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
-                tmp_df['Code'] = code
-                tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
+                if len(tmp_df) < 2:
+                    raise KeyError
+                else:
+                    tmp_df.reset_index(inplace=True)
+                    tmp_df = tmp_df[tmp_df['Date'] == end_date]
+                    tmp_df['Company'] = company
+                    tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
+                    tmp_df['Code'] = code
+                    tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
 
                 stock_df = pd.concat([stock_df, tmp_df])
-                time.sleep(random.randrange(1, 3))
+                time.sleep(1)
             except KeyError:
                 self.log.warning("KeyError: 'Date' - Stop trading company - {0}".format(company))
                 stop_stock_data = {
