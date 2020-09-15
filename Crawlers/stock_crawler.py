@@ -57,7 +57,7 @@ class StockCrawler(Crawler):
             except KeyError:
                 self.log.warning("KeyError: 'Date' - Stop trading company - {0}".format(company))
                 stop_stock_data = {
-                    'Date': datetime.strptime(start_date, "%Y-%m-%d"),
+                    'Date': datetime.strptime(end_date, "%Y-%m-%d"),
                     'High': np.NaN,
                     'Low': np.NaN,
                     'Open': np.NaN,
