@@ -42,7 +42,7 @@ class MongoHandler:
                         , 'Close': row['Close']
                         , 'candleCenter': row['candleCenter']
                         , 'Volume': row['Volume']
-                        , 'Adj Close': row['Adj Close']
+                        # , 'Adj Close': row['Adj Close']
                     }}, upsert=True
                 )
             )

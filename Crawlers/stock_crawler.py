@@ -3,6 +3,7 @@ import random
 import yaml
 import pandas as pd
 import numpy as np
+import yfinance as yf
 import pandas_datareader as pdr
 from datetime import datetime, timedelta
 from tqdm import tqdm
@@ -40,43 +41,23 @@ class StockCrawler(Crawler):
             company = row.company
             code = row.code
 
-            try:
-                tmp_df = pdr.DataReader(code, "yahoo", start_date, end_date)
-                if len(tmp_df) < 2:
-                    raise KeyError
-                else:
-                    tmp_df.reset_index(inplace=True)
-                    tmp_df = tmp_df[tmp_df['Date'] == end_date]
-                    tmp_df['Company'] = company
-                    tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
-                    tmp_df['Code'] = code
-                    tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
+            msft = yf.Ticker(code)
+            if CONFIG['iterate']:
+                tmp_df = msft.history(period="1d")
+            else:
+                tmp_df = msft.history(start=start_date, end=end_date)
+            tmp_df.reset_index(inplace=True)
+            tmp_df['Company'] = company
+            tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
+            tmp_df['Code'] = code
+            tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
 
-                stock_df = pd.concat([stock_df, tmp_df])
-                time.sleep(1)
-            except KeyError:
-                self.log.warning("KeyError: 'Date' - Stop trading company - {0}".format(company))
-                stop_stock_data = {
-                    'Date': datetime.strptime(end_date, "%Y-%m-%d"),
-                    'High': np.NaN,
-                    'Low': np.NaN,
-                    'Open': np.NaN,
-                    'Close': np.NaN,
-                    'Volume': np.NaN,
-                    'Adj Close': np.NaN,
-                    'Company': company,
-                    'Type': np.NaN,
-                    'Code': code,
-                    'candleCenter': np.NaN
-                }
-                tmp_df = pd.DataFrame(data=stop_stock_data, index=[0])
-                tmp_df.reset_index(inplace=True)
-                stock_df = pd.concat([stock_df, tmp_df])
-                time.sleep(random.randrange(1, 3))
-                continue
+            stock_df = pd.concat([stock_df, tmp_df])
 
-        stock_df.drop(['index'], axis=1, inplace=True)
+        # stock_df.drop(['index'], axis=1, inplace=True)
         stock_df.reset_index(inplace=True)
         stock_df.drop(['index'], axis=1, inplace=True)
+        stock_df.drop(["Dividends"], axis=1, inplace=True)
+        stock_df.drop(["Stock Splits"], axis=1, inplace=True)
 
         self.data_handler.save_stock_data(stock_df)
