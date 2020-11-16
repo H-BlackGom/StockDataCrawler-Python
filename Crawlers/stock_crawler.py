@@ -41,18 +41,31 @@ class StockCrawler(Crawler):
             company = row.company
             code = row.code
 
-            msft = yf.Ticker(code)
-            if CONFIG['iterate']:
-                tmp_df = msft.history(period="1d")
-            else:
-                tmp_df = msft.history(start=start_date, end=end_date)
-            tmp_df.reset_index(inplace=True)
-            tmp_df['Company'] = company
-            tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
-            tmp_df['Code'] = code
-            tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
+            try:
+                msft = yf.Ticker(code)
+                if CONFIG['iterate']:
+                    tmp_df = msft.history(period="1d")
+                else:
+                    tmp_df = msft.history(start=start_date, end=end_date)
+                tmp_df.reset_index(inplace=True)
+                tmp_df['Company'] = company
+                tmp_df['Type'] = tmp_df.apply(lambda x: int(x['Close'] > x['Open']), axis=1)
+                tmp_df['Code'] = code
+                tmp_df['candleCenter'] = (tmp_df.Open + tmp_df.Close) / 2
 
-            stock_df = pd.concat([stock_df, tmp_df])
+                stock_df = pd.concat([stock_df, tmp_df])
+            except Exception as e:
+                tmp_df['Close'] = 0
+                tmp_df['High'] = 0
+                tmp_df['Low'] = 0
+                tmp_df['Open'] = 0
+                tmp_df['Volume'] = 0
+                tmp_df['Date'] = datetime.strptime(datetime.now().strftime('%Y-%m-%d'), '%Y-%m-%d')
+                tmp_df['Company'] = company
+                tmp_df['Type'] = 0
+                tmp_df['Code'] = code
+                tmp_df['candleCenter'] = 0.0
+
 
         # stock_df.drop(['index'], axis=1, inplace=True)
         stock_df.reset_index(inplace=True)
